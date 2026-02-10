@@ -2,30 +2,90 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <title>Pathology Learning Portal</title>
 </head>
-<body>
-    <header>
-        <h1>Welcome to the Pathology Learning Portal</h1>
-    </header>
-    <main>
-        <section>
-            <h2>Introduction</h2>
-            <p>This portal provides an array of resources and information related to pathology.</p>
-        </section>
-        <section>
-            <h2>Resources</h2>
-            <ul>
-                <li><a href="#">Pathology Textbooks</a></li>
-                <li><a href="#">Case Studies</a></li>
-                <li><a href="#">Online Courses</a></li>
-            </ul>
-        </section>
-    </main>
-    <footer>
-        <p>&copy; 2026 Pathology Learning Portal</p>
-    </footer>
+<body class="bg-gray-100 p-5">
+    <div class="container mx-auto">
+        <h1 class="text-3xl font-bold mb-4">Pathology Learning Portal</h1>
+        <div id="quiz-container">
+            <div id="question" class="text-lg my-4"></div>
+            <div id="options" class="mb-4"></div>
+            <button id="next" class="bg-blue-500 text-white px-4 py-2 rounded hidden">Next Question</button>
+            <div id="progress" class="mt-4 text-sm"></div>
+            <div id="timer" class="mt-4 text-sm font-mono"></div>
+        </div>
+    </div>
+    <script>
+        const questions = [
+            { question: 'What is pathology?', options: ['A branch of medicine', 'A type of disease', 'A treatment method', 'None of the above'], answer: 0 },
+            // Add 99 more questions here with the same structure
+        ];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let totalTime = 300; // 5 minutes
+        let timer;
+
+        function startQuiz() {
+            document.getElementById('next').addEventListener('click', () => {
+                if (currentQuestionIndex < questions.length - 1) {
+                    currentQuestionIndex++;
+                    showQuestion();
+                } else {
+                    endQuiz();
+                }
+            });
+            startTimer();
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const currentQuestion = questions[currentQuestionIndex];
+            document.getElementById('question').innerText = currentQuestion.question;
+            const optionsContainer = document.getElementById('options');
+            optionsContainer.innerHTML = '';
+            currentQuestion.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.innerText = option;
+                button.className = 'block bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 mb-2 rounded';
+                button.addEventListener('click', () => selectOption(index));
+                optionsContainer.appendChild(button);
+            });
+            updateProgress();
+            document.getElementById('next').classList.add('hidden');
+        }
+
+        function selectOption(index) {
+            if (index === questions[currentQuestionIndex].answer) {
+                score++;
+            }
+            document.getElementById('next').classList.remove('hidden');
+        }
+
+        function updateProgress() {
+            const progress = Math.floor((currentQuestionIndex + 1) / questions.length * 100);
+            document.getElementById('progress').innerText = `Question ${currentQuestionIndex + 1} of ${questions.length} (${progress}%)`;
+        }
+
+        function startTimer() {
+            timer = setInterval(() => {
+                if (totalTime <= 0) {
+                    clearInterval(timer);
+                    endQuiz();
+                } else {
+                    totalTime--;
+                    document.getElementById('timer').innerText = `Time Left: ${Math.floor(totalTime / 60)}:${(totalTime % 60).toString().padStart(2, '0')}`;
+                }
+            }, 1000);
+        }
+
+        function endQuiz() {
+            clearInterval(timer);
+            document.getElementById('quiz-container').innerHTML = `<h2 class='text-2xl mt-4'>Quiz Finished!</h2><p>Your score: ${score}/${questions.length}</p>`;
+        }
+
+        startQuiz();
+    </script>
 </body>
 </html>
