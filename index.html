@@ -3,89 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <title>Pathology Learning Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@1.0.6/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        /* Glassmorphism effect */
+        body {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+    </style>
 </head>
-<body class="bg-gray-100 p-5">
-    <div class="container mx-auto">
-        <h1 class="text-3xl font-bold mb-4">Pathology Learning Portal</h1>
-        <div id="quiz-container">
-            <div id="question" class="text-lg my-4"></div>
-            <div id="options" class="mb-4"></div>
-            <button id="next" class="bg-blue-500 text-white px-4 py-2 rounded hidden">Next Question</button>
-            <div id="progress" class="mt-4 text-sm"></div>
-            <div id="timer" class="mt-4 text-sm font-mono"></div>
+<body class="bg-gray-100">
+    <div class="container mx-auto mt-10">
+        <div class="card">
+            <h1 class="text-3xl font-bold text-center mb-5">Pathology Quiz</h1>
+            <div id="quiz"></div>
+            <div class="mt-5">
+                <button id="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Submit Quiz</button>
+                <div id="results" class="mt-5 hidden"></div>
+            </div>
         </div>
-    </div>
-    <script>
-        const questions = [
-            { question: 'What is pathology?', options: ['A branch of medicine', 'A type of disease', 'A treatment method', 'None of the above'], answer: 0 },
-            // Add 99 more questions here with the same structure
-        ];
-        let currentQuestionIndex = 0;
-        let score = 0;
-        let totalTime = 300; // 5 minutes
-        let timer;
+        <script>
+            const questions = [
+                // Question format: { question: "Question text", answers: ["Option1", "Option2", ...], correct: "correct answer", category: "Category"}
+                { question: "What is the most common type of cancer?
+                ", answers: ["Lung", "Breast", "Colorectal", "Prostate"], correct: "Breast", category: "Fundamentals" },
+                { question: "What is a biopsy?", answers: ["A surgical removal of tissue", "A blood test", "An imaging technique", "A type of therapy"], correct: "A surgical removal of tissue", category: "Biopsy Types" },
+                { question: "What does cytology study?", answers: ["Cells", "Tissues", "Organs", "Organ systems"], correct: "Cells", category: "Cytology" },
+                // ... add all 100 questions here
 
-        function startQuiz() {
-            document.getElementById('next').addEventListener('click', () => {
-                if (currentQuestionIndex < questions.length - 1) {
-                    currentQuestionIndex++;
-                    showQuestion();
-                } else {
-                    endQuiz();
-                }
-            });
-            startTimer();
-            showQuestion();
-        }
+            ];
+            let currentQuestion = 0;
+            let score = 0;
+            let timer;
+            const quizContainer = document.getElementById('quiz');
+            const resultsContainer = document.getElementById('results');
+            const submitButton = document.getElementById('submit');
 
-        function showQuestion() {
-            const currentQuestion = questions[currentQuestionIndex];
-            document.getElementById('question').innerText = currentQuestion.question;
-            const optionsContainer = document.getElementById('options');
-            optionsContainer.innerHTML = '';
-            currentQuestion.options.forEach((option, index) => {
-                const button = document.createElement('button');
-                button.innerText = option;
-                button.className = 'block bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 mb-2 rounded';
-                button.addEventListener('click', () => selectOption(index));
-                optionsContainer.appendChild(button);
-            });
-            updateProgress();
-            document.getElementById('next').classList.add('hidden');
-        }
-
-        function selectOption(index) {
-            if (index === questions[currentQuestionIndex].answer) {
-                score++;
+            function loadQuestion() {
+                const questionData = questions[currentQuestion];
+                quizContainer.innerHTML = `<div class='question'><p>${questionData.question}</p>`;
+                questionData.answers.forEach((answer, index) => {
+                    quizContainer.innerHTML += `<div><input type='radio' name='answer' value='${answer}' id='answer${index}'><label for='answer${index}'>${answer}</label></div>`;
+                });
+                quizContainer.innerHTML += `</div>`;
             }
-            document.getElementById('next').classList.remove('hidden');
-        }
 
-        function updateProgress() {
-            const progress = Math.floor((currentQuestionIndex + 1) / questions.length * 100);
-            document.getElementById('progress').innerText = `Question ${currentQuestionIndex + 1} of ${questions.length} (${progress}%)`;
-        }
+            function showResults() {
+                resultsContainer.innerHTML = `You scored ${score} out of ${questions.length}`;
+                resultsContainer.classList.remove('hidden');
+            }
 
-        function startTimer() {
-            timer = setInterval(() => {
-                if (totalTime <= 0) {
-                    clearInterval(timer);
-                    endQuiz();
-                } else {
-                    totalTime--;
-                    document.getElementById('timer').innerText = `Time Left: ${Math.floor(totalTime / 60)}:${(totalTime % 60).toString().padStart(2, '0')}`;
+            submitButton.addEventListener('click', () => {
+                const selectedAnswer = document.querySelector('input[name="answer"]:checked');
+                if (selectedAnswer) {
+                    if (selectedAnswer.value === questions[currentQuestion].correct) {
+                        score++;
+                    }
+                    currentQuestion++;
+                    if (currentQuestion < questions.length) {
+                        loadQuestion();
+                    } else {
+                        clearInterval(timer);
+                        showResults();
+                    }
                 }
-            }, 1000);
-        }
+            });
 
-        function endQuiz() {
-            clearInterval(timer);
-            document.getElementById('quiz-container').innerHTML = `<h2 class='text-2xl mt-4'>Quiz Finished!</h2><p>Your score: ${score}/${questions.length}</p>`;
-        }
+            function startTimer(duration) {
+                let minutes, seconds;
+                timer = setInterval(() => {
+                    minutes = parseInt(duration / 60, 10);
+                    seconds = parseInt(duration % 60, 10);
+                    document.getElementById('timer').textContent = `${minutes} : ${seconds < 10 ? '0' : ''}${seconds}`;
+                    if (--duration < 0) {
+                        clearInterval(timer);
+                        showResults();
+                    }
+                }, 1000);
+            }
 
-        startQuiz();
-    </script>
+            loadQuestion();
+            startTimer(600); // 10 minutes timer
+        </script>
+    </div>
 </body>
 </html>
